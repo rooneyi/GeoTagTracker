@@ -20,3 +20,4 @@ class DashboardService
             'viewed_count' => Submission::query()->where('status', 'viewed')->count(),
         ];
     }
+

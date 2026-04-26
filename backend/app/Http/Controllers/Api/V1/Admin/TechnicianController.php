@@ -3,128 +3,53 @@
 namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\AuditLog;
+use App\Http\Requests\Api\V1\Admin\Technician\IndexTechnicianRequest;
+use App\Http\Requests\Api\V1\Admin\Technician\StoreTechnicianRequest;
+use App\Http\Requests\Api\V1\Admin\Technician\UpdateTechnicianRequest;
+use App\Http\Requests\Api\V1\Admin\Technician\UpdateTechnicianStatusRequest;
+use App\Http\Resources\Api\V1\UserResource;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rule;
+use App\Services\Api\V1\TechnicianService;
 
 class TechnicianController extends Controller
 {
-    public function index(Request $request): JsonResponse
+    public function __construct(private readonly TechnicianService $technicianService)
     {
-        $technicians = User::query()
-            ->where('role', 'technician')
-            ->when($request->filled('is_active'), function ($query) use ($request): void {
-                $query->where('is_active', $request->boolean('is_active'));
-            })
-            ->orderBy('name')
-            ->paginate((int) $request->integer('per_page', 20));
-
-        return response()->json($technicians);
     }
 
-    public function store(Request $request): JsonResponse
+    public function index(IndexTechnicianRequest $request)
     {
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'phone' => ['nullable', 'string', 'max:30'],
-            'password' => ['required', 'string', 'min:8'],
-            'is_active' => ['nullable', 'boolean'],
-        ]);
+        $technicians = $this->technicianService->list($request->validated());
 
-        $technician = User::query()->create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'phone' => $validated['phone'] ?? null,
-            'password' => Hash::make($validated['password']),
-            'role' => 'technician',
-            'is_active' => $validated['is_active'] ?? true,
-        ]);
-
-        AuditLog::query()->create([
-            'user_id' => $request->user()->id,
-            'action' => 'technician.create',
-            'entity_type' => 'user',
-            'entity_id' => $technician->id,
-            'metadata' => [
-                'email' => $technician->email,
-            ],
-        ]);
-
-        return response()->json($technician, 201);
+        return UserResource::collection($technicians)->response();
     }
 
-    public function update(Request $request, User $technician): JsonResponse
+    public function store(StoreTechnicianRequest $request): JsonResponse
     {
-        if (! $technician->isTechnician()) {
-            return response()->json(['message' => 'Utilisateur non technicien.'], 422);
-        }
+        $technician = $this->technicianService->create($request->validated(), $request->user());
 
-        $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($technician->id)],
-            'phone' => ['nullable', 'string', 'max:30'],
-            'password' => ['nullable', 'string', 'min:8'],
-            'is_active' => ['nullable', 'boolean'],
-        ]);
-
-        $technician->name = $validated['name'];
-        $technician->email = $validated['email'];
-        $technician->phone = $validated['phone'] ?? null;
-
-        if (array_key_exists('password', $validated) && $validated['password']) {
-            $technician->password = Hash::make($validated['password']);
-        }
-
-        if (array_key_exists('is_active', $validated)) {
-            $technician->is_active = (bool) $validated['is_active'];
-        }
-
-        $technician->save();
-
-        AuditLog::query()->create([
-            'user_id' => $request->user()->id,
-            'action' => 'technician.update',
-            'entity_type' => 'user',
-            'entity_id' => $technician->id,
-            'metadata' => [
-                'email' => $technician->email,
-            ],
-        ]);
-
-        return response()->json($technician);
+        return response()->json((new UserResource($technician))->resolve(), 201);
     }
 
-    public function updateStatus(Request $request, User $technician): JsonResponse
+    public function update(UpdateTechnicianRequest $request, User $technician): JsonResponse
     {
-        if (! $technician->isTechnician()) {
-            return response()->json(['message' => 'Utilisateur non technicien.'], 422);
-        }
+        $technician = $this->technicianService->update($technician, $request->validated(), $request->user());
 
-        $validated = $request->validate([
-            'is_active' => ['required', 'boolean'],
-        ]);
+        return response()->json((new UserResource($technician))->resolve());
+    }
 
-        $technician->forceFill([
-            'is_active' => (bool) $validated['is_active'],
-        ])->save();
-
-        AuditLog::query()->create([
-            'user_id' => $request->user()->id,
-            'action' => 'technician.status',
-            'entity_type' => 'user',
-            'entity_id' => $technician->id,
-            'metadata' => [
-                'is_active' => (bool) $validated['is_active'],
-            ],
-        ]);
+    public function updateStatus(UpdateTechnicianStatusRequest $request, User $technician): JsonResponse
+    {
+        $technician = $this->technicianService->updateStatus(
+            $technician,
+            (bool) $request->validated('is_active'),
+            $request->user()
+        );
 
         return response()->json([
             'message' => 'Statut technicien mis a jour.',
-            'technician' => $technician,
+            'technician' => (new UserResource($technician))->resolve(),
         ]);
     }
 }

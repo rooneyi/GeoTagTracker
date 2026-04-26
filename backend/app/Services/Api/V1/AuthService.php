@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class AuthService
 {
@@ -28,9 +29,7 @@ class AuthService
         }
 
         if (! $user->is_active) {
-            throw ValidationException::withMessages([
-                'email' => ['Compte inactif.'],
-            ]);
+            throw new HttpException(403, 'Compte inactif.');
         }
 
         $user->forceFill(['last_login_at' => now()])->save();

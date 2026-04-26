@@ -3,24 +3,19 @@
 namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Submission;
-use App\Models\User;
-use Illuminate\Http\JsonResponse;
+use App\Http\Resources\Api\V1\DashboardStatsResource;
+use App\Services\Api\V1\DashboardService;
 
 class DashboardController extends Controller
 {
-    public function stats(): JsonResponse
+    public function __construct(private readonly DashboardService $dashboardService)
     {
-        $totalSubmissions = Submission::query()->count();
-        $todaySubmissions = Submission::query()->whereDate('created_at', now()->toDateString())->count();
-        $activeTechnicians = User::query()->where('role', 'technician')->where('is_active', true)->count();
+    }
 
-        return response()->json([
-            'total_submissions' => $totalSubmissions,
-            'today_submissions' => $todaySubmissions,
-            'active_technicians' => $activeTechnicians,
-            'submitted_count' => Submission::query()->where('status', 'submitted')->count(),
-            'viewed_count' => Submission::query()->where('status', 'viewed')->count(),
-        ]);
+    public function stats(): DashboardStatsResource
+    {
+        $stats = $this->dashboardService->stats();
+
+        return new DashboardStatsResource($stats);
     }
 }

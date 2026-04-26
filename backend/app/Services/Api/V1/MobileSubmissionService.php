@@ -4,10 +4,10 @@ namespace App\Services\Api\V1;
 
 use App\Models\Submission;
 use App\Models\User;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\ValidationException;
 
 class MobileSubmissionService
 {
@@ -26,9 +26,7 @@ class MobileSubmissionService
     public function showForTechnician(User $user, Submission $submission): Submission
     {
         if ((int) $submission->user_id !== (int) $user->id) {
-            throw ValidationException::withMessages([
-                'submission' => ['Acces refuse.'],
-            ]);
+            throw new AuthorizationException('Acces refuse.');
         }
 
         return $submission;
