@@ -1,13 +1,13 @@
 export interface User {
   id: number
   name: string
-  email: string
+  email: string | null
   phone: string | null
-  role: 'admin' | 'technician'
-  is_active: boolean
+  role: 'admin' | 'technician' | null
+  is_active: boolean | null
   last_login_at: string | null
-  created_at: string
-  updated_at: string
+  created_at: string | null
+  updated_at: string | null
 }
 
 export interface Position {
@@ -43,13 +43,13 @@ export interface Submission {
 export interface Technician {
   id: number
   name: string
-  email: string
+  email: string | null
   phone: string | null
-  role: string
-  is_active: boolean
+  role: string | null
+  is_active: boolean | null
   last_login_at: string | null
-  created_at: string
-  updated_at: string
+  created_at: string | null
+  updated_at: string | null
 }
 
 export interface DashboardStats {

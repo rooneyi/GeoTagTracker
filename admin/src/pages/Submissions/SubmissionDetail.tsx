@@ -7,6 +7,7 @@ import { getSubmission, markSubmissionViewed } from '../../api/submissions'
 import type { Submission } from '../../types'
 import StatusBadge from '../../components/ui/StatusBadge'
 import { formatDate } from '../../utils/format'
+import { resolveAssetUrl } from '../../utils/assets'
 
 // Fix Leaflet default marker icons with Vite
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
@@ -124,7 +125,7 @@ export default function SubmissionDetail() {
           {/* Photo */}
           <Panel title="Photo">
             <img
-              src={submission.photo_url}
+              src={resolveAssetUrl(submission.photo_url)}
               alt="preuve terrain"
               style={{ width: '100%', maxHeight: 380, objectFit: 'cover', display: 'block' }}
             />

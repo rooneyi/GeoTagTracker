@@ -2,7 +2,7 @@ import { apiClient } from './client'
 import type { ApiResponse, User } from '../types'
 
 export interface LoginPayload {
-  email: string
+  phone: string
   password: string
   device_name?: string
 }

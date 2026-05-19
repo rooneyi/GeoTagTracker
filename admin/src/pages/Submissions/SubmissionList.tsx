@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { getSubmissions } from '../../api/submissions'
 import { getTechnicians } from '../../api/technicians'
 import type { Submission, Technician } from '../../types'
 import StatusBadge from '../../components/ui/StatusBadge'
 import { formatDate } from '../../utils/format'
+import { resolveAssetUrl } from '../../utils/assets'
 
 type FiltersState = {
   status: string
@@ -46,6 +47,7 @@ const inputStyle: React.CSSProperties = {
 }
 
 export default function SubmissionList() {
+  const navigate = useNavigate()
   const [submissions, setSubmissions] = useState<Submission[]>([])
   const [technicians, setTechnicians] = useState<Technician[]>([])
   const [loading, setLoading] = useState(true)
@@ -265,14 +267,27 @@ export default function SubmissionList() {
                   <Th>Date de capture</Th>
                   <Th>Statut</Th>
                   <Th>Position</Th>
+                  <Th>Action</Th>
                 </tr>
               </thead>
               <tbody>
                 {submissions.map((s) => (
-                  <tr key={s.id} style={{ borderBottom: '1px solid #EEEEEE' }}>
+                  <tr
+                    key={s.id}
+                    style={{ borderBottom: '1px solid #EEEEEE', cursor: 'pointer' }}
+                    onClick={() => navigate(`/submissions/${s.id}`)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        navigate(`/submissions/${s.id}`)
+                      }
+                    }}
+                    tabIndex={0}
+                  >
                     <Td>
                       <Link
                         to={`/submissions/${s.id}`}
+                        onClick={(e) => e.stopPropagation()}
                         style={{
                           color: '#FF7900',
                           textDecoration: 'none',
@@ -284,7 +299,7 @@ export default function SubmissionList() {
                     </Td>
                     <Td>
                       <img
-                        src={s.photo_url}
+                        src={resolveAssetUrl(s.photo_url)}
                         alt="aperçu"
                         style={{
                           width: 60,
@@ -305,6 +320,25 @@ export default function SubmissionList() {
                     <Td style={{ fontSize: 12, color: '#666666' }}>
                       {s.address_label ??
                         `${s.position.latitude.toFixed(4)}, ${s.position.longitude.toFixed(4)}`}
+                    </Td>
+                    <Td>
+                      <Link
+                        to={`/submissions/${s.id}`}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                          display: 'inline-block',
+                          padding: '7px 14px',
+                          background: '#FF7900',
+                          color: '#000000',
+                          textDecoration: 'none',
+                          fontSize: 12,
+                          fontWeight: 700,
+                          textTransform: 'uppercase',
+                          letterSpacing: 0.4,
+                        }}
+                      >
+                        Voir
+                      </Link>
                     </Td>
                   </tr>
                 ))}

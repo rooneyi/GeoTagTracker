@@ -5,7 +5,7 @@ import { login } from '../api/auth'
 import { useAuth } from '../contexts/AuthContext'
 
 export default function Login() {
-  const [email, setEmail] = useState('')
+  const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -17,17 +17,17 @@ export default function Login() {
     setError('')
     setLoading(true)
     try {
-      const res = await login({ email, password })
+      const res = await login({ phone, password })
       setAuth(res.data.data.token, res.data.data.user)
       navigate('/')
     } catch (err) {
       const axiosErr = err as AxiosError<{ message: string }>
       if (axiosErr.response?.status === 403) {
-        setError("Compte inactif. Contactez l'administrateur système.")
+        setError("Compte inactif. Contactez l'administrateur systeme.")
       } else if (axiosErr.response?.status === 422) {
         setError('Identifiants invalides.')
       } else {
-        setError('Une erreur est survenue. Réessayez.')
+        setError('Une erreur est survenue. Reessayez.')
       }
     } finally {
       setLoading(false)
@@ -58,7 +58,7 @@ export default function Login() {
         fontFamily: 'Helvetica Neue, Arial, sans-serif',
       }}
     >
-      <div style={{ width: 400 }}>
+      <div style={{ width: 400, maxWidth: 'calc(100vw - 32px)' }}>
         <div style={{ textAlign: 'center', marginBottom: 48 }}>
           <div style={{ marginBottom: 12 }}>
             <span style={{ color: '#FF7900', fontSize: 36, fontWeight: 700 }}>
@@ -69,7 +69,14 @@ export default function Login() {
               Tracker
             </span>
           </div>
-          <p style={{ color: '#666666', fontSize: 13, letterSpacing: 1, textTransform: 'uppercase' }}>
+          <p
+            style={{
+              color: '#666666',
+              fontSize: 13,
+              letterSpacing: 1,
+              textTransform: 'uppercase',
+            }}
+          >
             Espace Administrateur
           </p>
         </div>
@@ -90,15 +97,16 @@ export default function Login() {
                 letterSpacing: 0.5,
               }}
             >
-              Email
+              Numero de telephone
             </label>
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
               required
-              autoComplete="email"
+              autoComplete="tel"
               style={fieldStyle}
+              placeholder="+243..."
             />
           </div>
 

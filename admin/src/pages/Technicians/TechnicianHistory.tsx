@@ -4,6 +4,7 @@ import { getSubmissions } from '../../api/submissions'
 import type { Submission } from '../../types'
 import StatusBadge from '../../components/ui/StatusBadge'
 import { formatDate } from '../../utils/format'
+import { resolveAssetUrl } from '../../utils/assets'
 
 export default function TechnicianHistory() {
   const { id } = useParams<{ id: string }>()
@@ -154,7 +155,7 @@ export default function TechnicianHistory() {
                     </Td>
                     <Td>
                       <img
-                        src={s.photo_url}
+                        src={resolveAssetUrl(s.photo_url)}
                         alt="aperçu"
                         style={{
                           width: 60,

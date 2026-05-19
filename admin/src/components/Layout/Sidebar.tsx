@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom'
+import logoOrange from '../../assets/logo_orange.svg'
 
 const NAV_ITEMS = [
   { to: '/', label: 'Tableau de bord', end: true },
@@ -6,7 +7,13 @@ const NAV_ITEMS = [
   { to: '/technicians', label: 'Techniciens', end: false },
 ]
 
-export default function Sidebar() {
+type SidebarProps = {
+  isMobile: boolean
+  isOpen: boolean
+  onClose: () => void
+}
+
+export default function Sidebar({ isMobile, isOpen, onClose }: SidebarProps) {
   return (
     <aside
       style={{
@@ -16,47 +23,55 @@ export default function Sidebar() {
         display: 'flex',
         flexDirection: 'column',
         flexShrink: 0,
+        position: isMobile ? 'fixed' : 'relative',
+        top: 0,
+        left: 0,
+        bottom: 0,
+        zIndex: isMobile ? 1000 : 'auto',
+        transform: isMobile ? (isOpen ? 'translateX(0)' : 'translateX(-100%)') : 'none',
+        transition: 'transform 0.25s ease',
+        boxShadow: isMobile && isOpen ? '0 18px 40px rgba(0, 0, 0, 0.28)' : 'none',
       }}
     >
       <div
         style={{
           padding: '28px 24px 24px',
           borderBottom: '1px solid #2A2A2A',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'flex-start',
+          gap: 8,
         }}
       >
-        <span
-          style={{
-            color: '#FF7900',
-            fontFamily: 'Helvetica Neue, Arial, sans-serif',
-            fontSize: 20,
-            fontWeight: 700,
-            letterSpacing: 0.5,
-          }}
-        >
-          GeoTag
-        </span>
-        <span
-          style={{
-            color: '#FFFFFF',
-            fontFamily: 'Helvetica Neue, Arial, sans-serif',
-            fontSize: 20,
-            fontWeight: 700,
-          }}
-        >
-          {' '}
-          Tracker
-        </span>
-        <div
-          style={{
-            color: '#666666',
-            fontSize: 11,
-            fontFamily: 'Helvetica Neue, Arial, sans-serif',
-            marginTop: 4,
-            textTransform: 'uppercase',
-            letterSpacing: 1,
-          }}
-        >
-          Admin
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <img
+            src={logoOrange}
+            alt="GeoTag logo"
+            style={{ width: 40, height: 40 }}
+          />
+          <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'baseline', gap: 6 }}>
+            <span
+              style={{
+                color: '#FF7900',
+                fontFamily: 'Helvetica Neue, Arial, sans-serif',
+                fontSize: 20,
+                fontWeight: 700,
+                letterSpacing: 0.5,
+              }}
+            >
+              GeoTag
+            </span>
+            <span
+              style={{
+                color: '#FFFFFF',
+                fontFamily: 'Helvetica Neue, Arial, sans-serif',
+                fontSize: 20,
+                fontWeight: 700,
+              }}
+            >
+              Tracker
+            </span>
+          </div>
         </div>
       </div>
 
@@ -66,6 +81,9 @@ export default function Sidebar() {
             key={to}
             to={to}
             end={end}
+            onClick={() => {
+              if (isMobile) onClose()
+            }}
             style={({ isActive }) => ({
               display: 'block',
               padding: '13px 24px',

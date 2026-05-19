@@ -16,7 +16,6 @@ type FilterActive = '' | 'true' | 'false'
 
 interface FormState {
   name: string
-  email: string
   phone: string
   password: string
   is_active: boolean
@@ -24,7 +23,6 @@ interface FormState {
 
 const EMPTY_FORM: FormState = {
   name: '',
-  email: '',
   phone: '',
   password: '',
   is_active: true,
@@ -44,6 +42,7 @@ const inputBase: React.CSSProperties = {
 }
 
 export default function TechnicianList() {
+  const [showPassword, setShowPassword] = useState(false)
   const navigate = useNavigate()
   const [technicians, setTechnicians] = useState<Technician[]>([])
   const [loading, setLoading] = useState(true)
@@ -82,19 +81,20 @@ export default function TechnicianList() {
     setForm(EMPTY_FORM)
     setFormErrors({})
     setEditingId(null)
+    setShowPassword(false)
     setModal('create')
   }
 
   const openEdit = (tech: Technician) => {
     setForm({
       name: tech.name,
-      email: tech.email,
       phone: tech.phone ?? '',
       password: '',
-      is_active: tech.is_active,
+      is_active: tech.is_active ?? true,
     })
     setFormErrors({})
     setEditingId(tech.id)
+    setShowPassword(false)
     setModal('edit')
   }
 
@@ -110,18 +110,16 @@ export default function TechnicianList() {
       if (modal === 'create') {
         const payload: CreateTechnicianPayload = {
           name: form.name,
-          email: form.email,
+          phone: form.phone,
           password: form.password,
           is_active: form.is_active,
-          ...(form.phone ? { phone: form.phone } : {}),
         }
         await createTechnician(payload)
       } else if (modal === 'edit' && editingId != null) {
         const payload: UpdateTechnicianPayload = {
           name: form.name,
-          email: form.email,
+          phone: form.phone,
           is_active: form.is_active,
-          ...(form.phone ? { phone: form.phone } : {}),
           ...(form.password ? { password: form.password } : {}),
         }
         await updateTechnician(editingId, payload)
@@ -139,9 +137,11 @@ export default function TechnicianList() {
   }
 
   const handleToggleStatus = async (tech: Technician) => {
-    await toggleTechnicianStatus(tech.id, !tech.is_active)
+    await toggleTechnicianStatus(tech.id, !(tech.is_active ?? false))
     setTechnicians((prev) =>
-      prev.map((t) => (t.id === tech.id ? { ...t, is_active: !t.is_active } : t)),
+      prev.map((t) =>
+        t.id === tech.id ? { ...t, is_active: !(tech.is_active ?? false) } : t,
+      ),
     )
   }
 
@@ -155,7 +155,7 @@ export default function TechnicianList() {
     fontWeight: active ? 700 : 400,
     cursor: 'pointer',
     borderRadius: 0,
-    textTransform: 'uppercase' as const,
+    textTransform: 'uppercase',
     letterSpacing: 0.3,
   })
 
@@ -167,6 +167,8 @@ export default function TechnicianList() {
           alignItems: 'center',
           justifyContent: 'space-between',
           marginBottom: 24,
+          gap: 12,
+          flexWrap: 'wrap',
         }}
       >
         <h1
@@ -200,7 +202,6 @@ export default function TechnicianList() {
         </button>
       </div>
 
-      {/* Status filter */}
       <div
         style={{
           background: '#FFFFFF',
@@ -209,6 +210,7 @@ export default function TechnicianList() {
           display: 'flex',
           gap: 8,
           alignItems: 'center',
+          flexWrap: 'wrap',
         }}
       >
         <span
@@ -238,7 +240,6 @@ export default function TechnicianList() {
         ))}
       </div>
 
-      {/* Table */}
       <div style={{ background: '#FFFFFF' }}>
         <div
           style={{
@@ -287,93 +288,68 @@ export default function TechnicianList() {
                 <tr style={{ background: '#F5F5F5' }}>
                   <Th>ID</Th>
                   <Th>Nom</Th>
-                  <Th>Email</Th>
-                  <Th>Téléphone</Th>
+                  <Th>Telephone</Th>
                   <Th>Statut</Th>
-                  <Th>Créé le</Th>
+                  <Th>Cree le</Th>
                   <Th>Actions</Th>
                 </tr>
               </thead>
               <tbody>
-                {technicians.map((tech) => (
-                  <tr key={tech.id} style={{ borderBottom: '1px solid #EEEEEE' }}>
-                    <Td>{tech.id}</Td>
-                    <Td style={{ fontWeight: 600 }}>{tech.name}</Td>
-                    <Td style={{ color: '#666666' }}>{tech.email}</Td>
-                    <Td style={{ color: '#666666' }}>{tech.phone ?? '—'}</Td>
-                    <Td>
-                      <span
-                        style={{
-                          display: 'inline-block',
-                          padding: '3px 10px',
-                          background: tech.is_active ? '#E8F5E9' : '#FFEBEE',
-                          color: tech.is_active ? '#32C832' : '#CD3C14',
-                          fontSize: 12,
-                          fontWeight: 600,
-                          borderRadius: 0,
-                        }}
-                      >
-                        {tech.is_active ? 'Actif' : 'Inactif'}
-                      </span>
-                    </Td>
-                    <Td style={{ color: '#666666', fontSize: 13 }}>
-                      {formatDate(tech.created_at)}
-                    </Td>
-                    <Td>
-                      <div style={{ display: 'flex', gap: 8 }}>
-                        <button
-                          onClick={() =>
-                            navigate(`/technicians/${tech.id}/history`)
-                          }
+                {technicians.map((tech) => {
+                  const isActive = tech.is_active ?? false
+
+                  return (
+                    <tr key={tech.id} style={{ borderBottom: '1px solid #EEEEEE' }}>
+                      <Td>{tech.id}</Td>
+                      <Td style={{ fontWeight: 600 }}>{tech.name}</Td>
+                      <Td style={{ color: '#666666' }}>{tech.phone ?? '-'}</Td>
+                      <Td>
+                        <span
                           style={{
-                            padding: '5px 12px',
-                            background: 'transparent',
-                            border: '1px solid #DDDDDD',
-                            color: '#666666',
-                            fontFamily: 'Helvetica Neue, Arial, sans-serif',
-                            fontSize: 11,
-                            cursor: 'pointer',
+                            display: 'inline-block',
+                            padding: '3px 10px',
+                            background: isActive ? '#E8F5E9' : '#FFEBEE',
+                            color: isActive ? '#32C832' : '#CD3C14',
+                            fontSize: 12,
+                            fontWeight: 600,
                             borderRadius: 0,
                           }}
                         >
-                          Historique
-                        </button>
-                        <button
-                          onClick={() => openEdit(tech)}
-                          style={{
-                            padding: '5px 12px',
-                            background: 'transparent',
-                            border: '1px solid #000000',
-                            color: '#000000',
-                            fontFamily: 'Helvetica Neue, Arial, sans-serif',
-                            fontSize: 11,
-                            cursor: 'pointer',
-                            borderRadius: 0,
-                          }}
-                        >
-                          Modifier
-                        </button>
-                        <button
-                          onClick={() => handleToggleStatus(tech)}
-                          style={{
-                            padding: '5px 12px',
-                            background: tech.is_active ? 'transparent' : '#FF7900',
-                            border: tech.is_active
-                              ? '1px solid #CD3C14'
-                              : 'none',
-                            color: tech.is_active ? '#CD3C14' : '#000000',
-                            fontFamily: 'Helvetica Neue, Arial, sans-serif',
-                            fontSize: 11,
-                            cursor: 'pointer',
-                            borderRadius: 0,
-                          }}
-                        >
-                          {tech.is_active ? 'Désactiver' : 'Activer'}
-                        </button>
-                      </div>
-                    </Td>
-                  </tr>
-                ))}
+                          {isActive ? 'Actif' : 'Inactif'}
+                        </span>
+                      </Td>
+                      <Td style={{ color: '#666666', fontSize: 13 }}>
+                        {tech.created_at ? formatDate(tech.created_at) : '-'}
+                      </Td>
+                      <Td>
+                        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                          <button
+                            onClick={() => navigate(`/technicians/${tech.id}/history`)}
+                            style={actionButtonStyle('#DDDDDD', '#666666')}
+                          >
+                            Historique
+                          </button>
+                          <button
+                            onClick={() => openEdit(tech)}
+                            style={actionButtonStyle('#000000', '#000000')}
+                          >
+                            Modifier
+                          </button>
+                          <button
+                            onClick={() => handleToggleStatus(tech)}
+                            style={{
+                              ...actionButtonStyle(isActive ? '#CD3C14' : '#FF7900', isActive ? '#CD3C14' : '#000000'),
+                              background: isActive ? 'transparent' : '#FF7900',
+                              border: isActive ? '1px solid #CD3C14' : 'none',
+                            }}
+                          >
+                            {isActive ? 'Desactiver' : 'Activer'}
+                          </button>
+                        </div>
+                      </Td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
 
@@ -391,37 +367,17 @@ export default function TechnicianList() {
                 <button
                   onClick={() => fetchData(currentPage - 1, filterActive)}
                   disabled={currentPage === 1}
-                  style={{
-                    padding: '6px 16px',
-                    background: 'transparent',
-                    border: '1px solid #DDDDDD',
-                    color: currentPage === 1 ? '#CCCCCC' : '#000000',
-                    cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
-                    fontSize: 13,
-                    borderRadius: 0,
-                    fontFamily: 'Helvetica Neue, Arial, sans-serif',
-                  }}
+                  style={paginationBtnStyle(currentPage === 1)}
                 >
-                  Précédent
+                  Precedent
                 </button>
-                <span
-                  style={{ fontSize: 13, color: '#666666', padding: '0 8px' }}
-                >
+                <span style={{ fontSize: 13, color: '#666666', padding: '0 8px' }}>
                   Page {currentPage} / {lastPage}
                 </span>
                 <button
                   onClick={() => fetchData(currentPage + 1, filterActive)}
                   disabled={currentPage === lastPage}
-                  style={{
-                    padding: '6px 16px',
-                    background: 'transparent',
-                    border: '1px solid #DDDDDD',
-                    color: currentPage === lastPage ? '#CCCCCC' : '#000000',
-                    cursor: currentPage === lastPage ? 'not-allowed' : 'pointer',
-                    fontSize: 13,
-                    borderRadius: 0,
-                    fontFamily: 'Helvetica Neue, Arial, sans-serif',
-                  }}
+                  style={paginationBtnStyle(currentPage === lastPage)}
                 >
                   Suivant
                 </button>
@@ -431,7 +387,6 @@ export default function TechnicianList() {
         )}
       </div>
 
-      {/* Modal */}
       {modal !== 'none' && (
         <div
           style={{
@@ -442,18 +397,19 @@ export default function TechnicianList() {
             alignItems: 'center',
             justifyContent: 'center',
             zIndex: 1000,
+            padding: 16,
           }}
         >
           <div
             style={{
               background: '#FFFFFF',
               width: 480,
+              maxWidth: '100%',
               maxHeight: '90vh',
               overflow: 'auto',
               fontFamily: 'Helvetica Neue, Arial, sans-serif',
             }}
           >
-            {/* Modal header */}
             <div
               style={{
                 padding: '18px 24px',
@@ -487,11 +443,10 @@ export default function TechnicianList() {
                   lineHeight: 1,
                 }}
               >
-                ×
+                x
               </button>
             </div>
 
-            {/* Modal body */}
             <div
               style={{
                 padding: 24,
@@ -512,25 +467,16 @@ export default function TechnicianList() {
                 />
               </FormField>
 
-              <FormField label="Email *" error={formErrors.email?.[0]}>
+              <FormField label="Telephone *" error={formErrors.phone?.[0]}>
                 <input
-                  type="email"
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  style={{
-                    ...inputBase,
-                    borderColor: formErrors.email ? '#CD3C14' : '#DDDDDD',
-                  }}
-                />
-              </FormField>
-
-              <FormField label="Téléphone" error={formErrors.phone?.[0]}>
-                <input
-                  type="text"
+                  type="tel"
                   value={form.phone}
                   onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                  style={inputBase}
-                  placeholder="+228..."
+                  style={{
+                    ...inputBase,
+                    borderColor: formErrors.phone ? '#CD3C14' : '#DDDDDD',
+                  }}
+                  placeholder="+243..."
                 />
               </FormField>
 
@@ -538,19 +484,34 @@ export default function TechnicianList() {
                 label={
                   modal === 'create'
                     ? 'Mot de passe *'
-                    : 'Mot de passe (vide = inchangé)'
+                    : 'Mot de passe (vide = inchange)'
                 }
                 error={formErrors.password?.[0]}
               >
-                <input
-                  type="password"
-                  value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  style={{
-                    ...inputBase,
-                    borderColor: formErrors.password ? '#CD3C14' : '#DDDDDD',
-                  }}
-                />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={form.password}
+                    onChange={(e) => setForm({ ...form, password: e.target.value })}
+                    style={{
+                      ...inputBase,
+                      borderColor: formErrors.password ? '#CD3C14' : '#DDDDDD',
+                    }}
+                  />
+                  <input
+                    type="checkbox"
+                    id="show_password"
+                    checked={showPassword}
+                    onChange={() => setShowPassword((v) => !v)}
+                    style={{ marginLeft: 4, cursor: 'pointer' }}
+                  />
+                  <label
+                    htmlFor="show_password"
+                    style={{ fontSize: 12, color: '#1A1A1A', cursor: 'pointer' }}
+                  >
+                    Afficher
+                  </label>
+                </div>
               </FormField>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -558,9 +519,7 @@ export default function TechnicianList() {
                   type="checkbox"
                   id="is_active_modal"
                   checked={form.is_active}
-                  onChange={(e) =>
-                    setForm({ ...form, is_active: e.target.checked })
-                  }
+                  onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
                   style={{ width: 16, height: 16, cursor: 'pointer' }}
                 />
                 <label
@@ -572,7 +531,6 @@ export default function TechnicianList() {
               </div>
             </div>
 
-            {/* Modal footer */}
             <div
               style={{
                 padding: '16px 24px',
@@ -617,7 +575,7 @@ export default function TechnicianList() {
                   letterSpacing: 0.5,
                 }}
               >
-                {submitting ? '...' : modal === 'create' ? 'Créer' : 'Enregistrer'}
+                {submitting ? '...' : modal === 'create' ? 'Creer' : 'Enregistrer'}
               </button>
             </div>
           </div>
@@ -706,4 +664,30 @@ function FormField({
       )}
     </div>
   )
+}
+
+function actionButtonStyle(borderColor: string, color: string): React.CSSProperties {
+  return {
+    padding: '5px 12px',
+    background: 'transparent',
+    border: `1px solid ${borderColor}`,
+    color,
+    fontFamily: 'Helvetica Neue, Arial, sans-serif',
+    fontSize: 11,
+    cursor: 'pointer',
+    borderRadius: 0,
+  }
+}
+
+function paginationBtnStyle(disabled: boolean): React.CSSProperties {
+  return {
+    padding: '6px 16px',
+    background: 'transparent',
+    border: '1px solid #DDDDDD',
+    color: disabled ? '#CCCCCC' : '#000000',
+    cursor: disabled ? 'not-allowed' : 'pointer',
+    fontSize: 13,
+    borderRadius: 0,
+    fontFamily: 'Helvetica Neue, Arial, sans-serif',
+  }
 }

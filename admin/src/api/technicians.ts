@@ -9,15 +9,13 @@ export interface TechnicianFilters {
 
 export interface CreateTechnicianPayload {
   name: string
-  email: string
-  phone?: string
+  phone: string
   password: string
   is_active?: boolean
 }
 
 export interface UpdateTechnicianPayload {
   name?: string
-  email?: string
   phone?: string
   password?: string
   is_active?: boolean
