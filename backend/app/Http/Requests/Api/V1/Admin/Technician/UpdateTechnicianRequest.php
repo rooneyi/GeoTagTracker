@@ -18,8 +18,8 @@ class UpdateTechnicianRequest extends FormRequest
 
         return [
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($technician?->id)],
-            'phone' => ['nullable', 'string', 'max:30'],
+            'phone' => ['required', 'string', 'max:30', Rule::unique('users', 'phone')->ignore($technician?->id)],
+            'email' => ['nullable', 'email', 'max:255', Rule::unique('users', 'email')->ignore($technician?->id)],
             'password' => ['nullable', 'string', 'min:8'],
             'is_active' => ['nullable', 'boolean'],
         ];

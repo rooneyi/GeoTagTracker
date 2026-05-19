@@ -28,8 +28,8 @@ class TechnicianService
     {
         $technician = User::query()->create([
             'name' => $validated['name'],
-            'email' => $validated['email'],
-            'phone' => $validated['phone'] ?? null,
+            'phone' => $validated['phone'],
+            'email' => $validated['email'] ?? null,
             'password' => Hash::make($validated['password']),
             'role' => 'technician',
             'is_active' => $validated['is_active'] ?? true,
@@ -40,7 +40,7 @@ class TechnicianService
             action: 'technician.create',
             entityType: 'user',
             entityId: $technician->id,
-            metadata: ['email' => $technician->email]
+            metadata: ['phone' => $technician->phone]
         );
 
         return $technician;
@@ -51,8 +51,8 @@ class TechnicianService
         $this->guardTechnician($technician);
 
         $technician->name = $validated['name'];
-        $technician->email = $validated['email'];
-        $technician->phone = $validated['phone'] ?? null;
+        $technician->phone = $validated['phone'];
+        $technician->email = $validated['email'] ?? null;
 
         if (! empty($validated['password'])) {
             $technician->password = Hash::make($validated['password']);
@@ -69,7 +69,7 @@ class TechnicianService
             action: 'technician.update',
             entityType: 'user',
             entityId: $technician->id,
-            metadata: ['email' => $technician->email]
+            metadata: ['phone' => $technician->phone]
         );
 
         return $technician;

@@ -20,11 +20,11 @@ class AuthService
     public function login(array $validated, Request $request): array
     {
         /** @var User|null $user */
-        $user = User::query()->where('email', $validated['email'])->first();
+        $user = User::query()->where('phone', $validated['phone'])->first();
 
         if (! $user || ! Hash::check($validated['password'], $user->password)) {
             throw ValidationException::withMessages([
-                'email' => ['Identifiants invalides.'],
+                'phone' => ['Identifiants invalides.'],
             ]);
         }
 

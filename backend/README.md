@@ -1,58 +1,221 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# GEO Tag Tracker — Backend API
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+API REST Laravel pour la collecte de photos géolocalisées (techniciens) et la supervision (administrateurs).
 
-## About Laravel
+- **Base URL** : `/api/v1`
+- **Auth** : Laravel Sanctum (Bearer token)
+- **Login** : numéro de téléphone + mot de passe
+- **Contrat détaillé** : [docs/back_implementation.md](docs/back_implementation.md)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Prérequis
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+| Outil | Version |
+|-------|---------|
+| PHP | 8.3+ (extensions : `mbstring`, `openssl`, `pdo`, `tokenizer`, `xml`, `ctype`, `json`, `fileinfo`) |
+| Composer | 2.x |
+| MySQL ou MariaDB | 8+ |
+| Node.js + npm | 20+ (optionnel, pour les assets Vite) |
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## Installation (nouveau clone)
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+### 1. Cloner et entrer dans le projet
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+git clone <url-du-repo> GEO_TAG_TRACKER
+cd GEO_TAG_TRACKER/backend
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+### 2. Dépendances PHP
 
-## Contributing
+```bash
+composer install
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 3. Variables d’environnement
 
-## Code of Conduct
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Éditez `.env` au minimum :
 
-## Security Vulnerabilities
+```env
+APP_URL=http://localhost:8000
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=geotag_tracker
+DB_USERNAME=root
+DB_PASSWORD=votre_mot_de_passe
+```
 
-## License
+Créez la base MySQL avant de migrer :
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```sql
+CREATE DATABASE geotag_tracker CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
+
+### 4. Base de données
+
+```bash
+php artisan migrate
+php artisan db:seed
+```
+
+Le seed crée un **admin** et un **technicien** de test (voir ci-dessous).
+
+### 5. Stockage des photos
+
+```bash
+php artisan storage:link
+```
+
+Les images sont enregistrées sur le disque `public` (`storage/app/public/submissions/...`).
+
+---
+
+## Lancer le serveur
+
+### Développement (recommandé)
+
+Le fichier `php.ini` du projet augmente les limites d’upload (photos jusqu’à ~10 Mo). **Utilisez-le toujours** avec `artisan serve` :
+
+```bash
+php -c php.ini artisan serve --host=0.0.0.0 --port=8000
+```
+
+- API locale : `http://127.0.0.1:8000/api/v1`
+- Depuis un téléphone sur le même réseau : `http://<IP-LAN-du-PC>:8000/api/v1`  
+  (ex. `http://192.168.11.130:8000/api/v1`)
+
+### Stack complète (serveur + queue + logs + Vite)
+
+```bash
+composer run dev
+```
+
+### Sans `php.ini` (déconseillé pour les uploads)
+
+Les photos de plus de **2 Mo** échoueront avec une erreur 422 (*The image failed to upload*) si PHP utilise ses valeurs par défaut.
+
+---
+
+## Comptes de test
+
+| Rôle | Téléphone | Mot de passe | Routes API |
+|------|-----------|--------------|------------|
+| Admin | `+22890000001` | `password` | `/api/v1/admin/*` |
+| Technicien | `+22890000002` | `password` | `/api/v1/mobile/*` |
+
+Relancer uniquement l’admin :
+
+```bash
+php artisan db:seed --class=AdminSeeder
+```
+
+---
+
+## Tester l’API
+
+### Connexion
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/v1/auth/login \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
+  -d '{"phone":"+22890000001","password":"password","device_name":"cli"}'
+```
+
+Réponse : `data.token` (à utiliser en `Authorization: Bearer <token>`).
+
+### Profil connecté
+
+```bash
+curl http://127.0.0.1:8000/api/v1/auth/me \
+  -H "Accept: application/json" \
+  -H "Authorization: Bearer <token>"
+```
+
+### Statistiques admin
+
+```bash
+curl http://127.0.0.1:8000/api/v1/admin/dashboard/stats \
+  -H "Accept: application/json" \
+  -H "Authorization: Bearer <token_admin>"
+```
+
+Toutes les routes, champs et codes d’erreur : **[docs/back_implementation.md](docs/back_implementation.md)**.
+
+---
+
+## Rôles et routes principales
+
+| Préfixe | Rôle | Exemples |
+|---------|------|----------|
+| `/api/v1/auth/*` | public / authentifié | `POST login`, `GET me`, `POST logout` |
+| `/api/v1/mobile/*` | `technician` | `POST submissions` (multipart + photo) |
+| `/api/v1/admin/*` | `admin` | techniciens, soumissions, dashboard |
+
+---
+
+## Intégration mobile / web
+
+1. **URL de base** : pointer le client vers `http://<IP>:8000/api/v1` (pas `localhost` depuis un appareil physique).
+2. **Login** : envoyer `phone` et `password` en JSON (pas `email`).
+3. **Soumission photo** : `POST /api/v1/mobile/submissions` en `multipart/form-data`  
+   Champs : `image`, `latitude`, `longitude`, `captured_at`, `device_platform`, etc.  
+   Détail : [docs/back_implementation.md §4.3](docs/back_implementation.md).
+4. **Header** : `Authorization: Bearer <token>` sur les routes protégées.
+
+---
+
+## Commandes utiles
+
+```bash
+# Réinitialiser la BDD + seeds
+php artisan migrate:fresh --seed
+
+# Formater le code (Pint)
+./vendor/bin/pint
+
+# Tests
+composer test
+
+# Vider les caches
+php artisan config:clear && php artisan cache:clear
+```
+
+---
+
+## Dépannage
+
+| Problème | Cause probable | Solution |
+|----------|----------------|----------|
+| `422` — *The image failed to upload* | Limite PHP &lt; taille photo (~3 Mo+) | Lancer avec `php -c php.ini artisan serve` |
+| `422` — identifiants invalides | Mauvais téléphone/mot de passe | Utiliser les comptes seed ou recréer via admin |
+| `403` — compte inactif | `is_active = false` | Réactiver via `PATCH .../technicians/{id}/status` |
+| Mobile ne joint pas l’API | Mauvaise IP / firewall | `0.0.0.0` sur `serve`, même Wi‑Fi, IP LAN du PC |
+| Photos non visibles | Lien storage absent | `php artisan storage:link` |
+
+Logs : `storage/logs/laravel.log`
+
+---
+
+## Documentation projet
+
+- [back_implementation.md](docs/back_implementation.md) — guide d’intégration API
+- [specification_technique.md](docs/specification_technique.md) — architecture
+- [specification_fonctionnelle.md](docs/specification_fonctionnelle.md) — règles métier
+- [cahier_de_charge.md](docs/cahier_de_charge.md) — contexte produit
+
+---
+
+## Licence
+
+MIT (framework Laravel). Voir le dépôt pour la licence du projet métier.

@@ -14,9 +14,19 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => ['required', 'email'],
+            'phone' => ['required', 'string', 'max:30'],
             'password' => ['required', 'string'],
             'device_name' => ['nullable', 'string', 'max:100'],
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'phone.required' => 'Le numero de telephone est obligatoire.',
         ];
     }
 }

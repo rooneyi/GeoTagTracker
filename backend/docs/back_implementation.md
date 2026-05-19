@@ -34,7 +34,7 @@ Protection appliquee par middleware de role.
 
 ```json
 {
-  "email": "admin@example.com",
+  "phone": "+22890000001",
   "password": "password",
   "device_name": "web-admin"
 }
@@ -42,7 +42,7 @@ Protection appliquee par middleware de role.
 
 Validation:
 
-- `email`: required, email
+- `phone`: required, string, max 30
 - `password`: required, string
 - `device_name`: nullable, string, max 100
 
@@ -56,8 +56,8 @@ Reponse 200:
     "user": {
       "id": 1,
       "name": "Admin User",
-      "email": "admin@example.com",
-      "phone": null,
+      "email": null,
+      "phone": "+22890000001",
       "role": "admin",
       "is_active": true,
       "last_login_at": "2026-04-26T10:00:00.000000Z",
@@ -201,8 +201,8 @@ Prefixe: `/api/v1/admin`
 ```json
 {
   "name": "Tech 1",
-  "email": "tech1@example.com",
-  "phone": "+228...",
+  "phone": "+22890000003",
+  "email": null,
   "password": "password123",
   "is_active": true
 }
@@ -211,8 +211,8 @@ Prefixe: `/api/v1/admin`
 Validation:
 
 - `name`: required, string, max 255
-- `email`: required, email, unique
-- `phone`: nullable, string, max 30
+- `phone`: required, string, max 30, unique
+- `email`: nullable, email, unique
 - `password`: required, string, min 8
 - `is_active`: nullable, boolean
 
@@ -223,7 +223,7 @@ Important:
 ### 5.3 Mettre a jour technicien
 
 - `PUT /api/v1/admin/technicians/{id}`
-- Champs: `name`, `email`, `phone`, `password` (optionnel), `is_active`
+- Champs: `name`, `phone`, `email` (optionnel), `password` (optionnel), `is_active`
 - Erreur 422 si l'utilisateur cible n'est pas un technicien.
 
 ### 5.4 Activer/Desactiver technicien

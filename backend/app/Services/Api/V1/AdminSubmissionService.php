@@ -15,7 +15,7 @@ class AdminSubmissionService
     public function list(array $filters): LengthAwarePaginator
     {
         return Submission::query()
-            ->with('user:id,name,email')
+            ->with('user:id,name,phone')
             ->when(! empty($filters['status']), function ($query) use ($filters): void {
                 $query->where('status', $filters['status']);
             })
@@ -34,7 +34,7 @@ class AdminSubmissionService
 
     public function show(Submission $submission): Submission
     {
-        return $submission->load('user:id,name,email');
+        return $submission->load('user:id,name,phone');
     }
 
     public function markViewed(Submission $submission, User $actor): Submission
